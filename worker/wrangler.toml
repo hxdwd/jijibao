@@ -1,0 +1,20 @@
+# 共享后端 Worker：多个 Pages 项目通过 Service binding 调用
+#
+# 部署：npx wrangler deploy -c worker/wrangler.toml
+# 密钥：npx wrangler secret put DEEPSEEK_API_KEY -c worker/wrangler.toml
+#
+# 注意：.dev.vars 仅本地开发用，生产密钥必须用 wrangler secret put 或 Dashboard 设置。
+
+name = "my-bills-api"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+compatibility_flags = ["nodejs_compat"]
+
+[[kv_namespaces]]
+binding = "QUOTE_CACHE"
+id = "a025d8ed33bf444c9ec7df45993aae92"
+
+[vars]
+LOG_LEVEL = "1"
+
+# DO NOT declare API keys here. [vars] deploys as Plaintext and overwrites Secrets.

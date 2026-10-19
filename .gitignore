@@ -1,0 +1,34 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dev-dist/
+
+# Environment
+.env
+.env.local
+.env.*.local
+*.env
+
+# Wrangler 本地密钥与调试产物
+.dev.vars
+.wrangler/
+worker/.wrangler/
+worker/.wrangler-*/
+wrangler-dev.err
+wrangler-dev.out
+
+# 日志与临时验证产物
+*.log
+vite.config.ts.timestamp-*.mjs
+
+# IDE
+.idea/
+.vscode/settings.json
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db

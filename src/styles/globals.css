@@ -1,0 +1,279 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 隐藏可滑动元素的滚动条（本位币滑动选择器） */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+
+:root {
+  --bg: #FAFAF8;
+  --surface: #FFFFFF;
+  --brand: #F4D77C;
+  --brand-strong: #E5C45E;
+  --brand-soft: #F8E8B0;
+  --brand-tint: #FFF7E6;
+  --ink: #222222;
+  --ink-2: #888888;
+  --ok: #4CAF50;
+  --danger: #FF6B6B;
+}
+
+* {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+  user-select: none;
+}
+
+html {
+  font-family: -apple-system, "PingFang SC", "Microsoft YaHei", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg);
+  color: var(--ink);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overscroll-behavior: none;
+}
+
+#root {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  overflow-x: hidden;
+}
+
+/* 防止长文本/金额撑破容器 */
+input,
+button,
+textarea,
+select {
+  max-width: 100%;
+  font-family: inherit;
+}
+
+.break-amount {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 金额字体：等宽数字 */
+.font-amount {
+  font-family: "Roboto Mono", "DIN Alternate", monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+}
+
+/* ===== 金额响应式流式字号（移动端优先） =====
+   使用 clamp() 让等宽数字字号随视口宽度在区间内无级缩放：
+   - 最小 12px（极窄屏也保证可读）
+   - 理想值 3.6vw（随屏幕宽度等比变化，小屏自动缩小）
+   - 最大 18px（大屏不再无限放大，保持设计比例）
+   仅作用于数字节点，不改变颜色/间距/布局；配合 overflow-wrap 兜底，
+   长数字在小屏下优先缩字号、必要时折行，绝不截断或省略。
+   用法：在金额容器/数字节点上同时加 `font-amount amount-fluid`。 */
+.amount-fluid {
+  font-size: clamp(12px, 3.6vw, 18px);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+/* 小字号金额块（如财富页顶部三卡片 value）：
+   卡片为三栏均分，单卡极窄，字号需比通用块更小、上限更低，避免撑破卡片。 */
+.amount-fluid-sm {
+  font-size: clamp(13px, 3.4vw, 18px);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  min-width: 0;
+}
+
+/* 大字号金额块（如首页总资产、汇总卡、环形图圆心）专用：
+   上限放宽到 28px，下限 14px，避免大数字在小屏撑破卡片。
+   注：圆心数字额外由 JS 按容器/字符数动态缩字号（见 DonutChart），此处不再折行，
+   改为单行 nowrap——宁可缩小也不断词，保证财务数字不被错误折行。 */
+.amount-fluid-lg {
+  /* --amount-scale：调用方可在数字过长时按比例缩小（默认 1，不影响既有调用）。
+     用变量而不是内联 font-size，是为了让下面的移动端 media query 依然生效。 */
+  font-size: calc(clamp(14px, 6.4vw, 28px) * var(--amount-scale, 1));
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* ===== 移动端（≤768px）字号分级 + 紧凑字距 =====
+   在 clamp(vw) 自适应基础上，进一步对小屏做更激进收缩并收紧字距，
+   防止大号资产数字在手机上顶满/撑破卡片；大屏（>768px）维持原 clamp。 */
+@media (max-width: 768px) {
+  .amount-fluid {
+    font-size: clamp(11px, 3.2vw, 16px);
+    letter-spacing: -0.02em;
+  }
+  .amount-fluid-sm {
+    font-size: clamp(12px, 3.1vw, 16px);
+    letter-spacing: -0.02em;
+  }
+  .amount-fluid-lg {
+    font-size: calc(clamp(13px, 5.6vw, 24px) * var(--amount-scale, 1));
+    letter-spacing: -0.02em;
+  }
+}
+
+/* 标题字体 */
+.font-title {
+  font-family: Georgia, "Source Han Serif SC", serif;
+}
+
+/* 安全区域 */
+.safe-area-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+.safe-area-bottom {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 96px);
+}
+
+/* 底部导航栏专用安全区：仅保留手机安全区，不额外撑高 */
+.safe-area-bottom-bar {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 主内容区底部安全留白：避免固定 TabBar（约58px + 12px bottom + 安全区）
+   及首页悬浮"记一笔"按钮（82px 之上）遮挡最后一条内容。
+   组合 = 安全区 + 140px（足够覆盖 bar+按钮+余量）。 */
+.tabbar-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom) + 140px);
+}
+
+/* 呼吸灯动画：透明度 60%↔100% 循环，用于悬浮操作按钮 */
+@keyframes breathe {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+/* 光晕动画：环形扩散 + 淡出 */
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(201, 100, 66, 0.15); }
+  50% { box-shadow: 0 0 0 8px rgba(201, 100, 66, 0); }
+}
+
+/* 滚动条（极简） */
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+/* 去除 input focus 默认轮廓 */
+input:focus {
+  outline: none;
+}
+
+/* 数字键盘禁用上下箭头 */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* ===== 统一动画类 ===== */
+.animate-fade-up {
+  animation: fadeUp 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-page-fade {
+  animation: pageFade 300ms ease-out both;
+}
+
+/* 下拉面板：从锚点自然展开 */
+.animate-drop-down {
+  animation: dropDown 160ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes dropDown {
+  from { opacity: 0; transform: translate(-50%, -6px) scale(0.98); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+/* 错峰进场：通过 --i 控制延迟 */
+.stagger > * {
+  animation: fadeUp 400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.stagger > *:nth-child(1) { animation-delay: 0ms; }
+.stagger > *:nth-child(2) { animation-delay: 60ms; }
+.stagger > *:nth-child(3) { animation-delay: 120ms; }
+.stagger > *:nth-child(4) { animation-delay: 180ms; }
+.stagger > *:nth-child(5) { animation-delay: 240ms; }
+.stagger > *:nth-child(6) { animation-delay: 300ms; }
+.stagger > *:nth-child(7) { animation-delay: 360ms; }
+.stagger > *:nth-child(8) { animation-delay: 420ms; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pageFade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes countUp {
+  from { opacity: 0.5; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count {
+  animation: countUp 600ms ease-out;
+}
+
+/* ===== Ripple 点击反馈 ===== */
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple-wave {
+  position: absolute;
+  border-radius: 9999px;
+  transform: scale(0);
+  background: rgba(34, 34, 34, 0.08);
+  animation: ripple 500ms linear;
+  pointer-events: none;
+}
+@keyframes ripple {
+  to { transform: scale(2.5); opacity: 0; }
+}
+
+/* 骨架屏 */
+.skeleton {
+  background: linear-gradient(90deg, #f0f0ee 25%, #fafafa 50%, #f0f0ee 75%);
+  background-size: 200% 100%;
+  animation: skeleton 1200ms ease-in-out infinite;
+  border-radius: 12px;
+}
+@keyframes skeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* PWA 安装按钮 */
+.pwa-install-btn {
+  position: fixed;
+  bottom: 92px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 999;
+}

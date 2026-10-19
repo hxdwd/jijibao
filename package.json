@@ -1,0 +1,40 @@
+{
+  "name": "jijibao",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "worker:dev": "wrangler dev -c worker/wrangler.toml",
+    "worker:check": "wrangler deploy -c worker/wrangler.toml --dry-run",
+    "worker:deploy": "wrangler deploy -c worker/wrangler.toml",
+    "deploy": "npm run build && wrangler pages deploy dist --project-name jijibao"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.109.0",
+    "chart.js": "^4.4.4",
+    "dexie": "^4.4.4",
+    "lucide-react": "^0.441.0",
+    "react": "^18.3.1",
+    "react-chartjs-2": "^5.2.0",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^5.20260710.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.45",
+    "tailwindcss": "^3.4.10",
+    "typescript": "^5.5.3",
+    "vite": "^5.4.2",
+    "vite-plugin-pwa": "^0.20.1",
+    "wrangler": "^4.114.0"
+  }
+}

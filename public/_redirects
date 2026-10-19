@@ -1,0 +1,2 @@
+# SPA 深链回退：/wealth/detail/:market/:symbol 等直接刷新时交由前端路由处理
+/*    /index.html   200
