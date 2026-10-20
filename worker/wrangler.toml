@@ -10,6 +10,11 @@ main = "src/index.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
+# 关键：关闭 workers.dev 公网入口。
+# 本 Worker 只允许被 Pages 通过 Service binding 调用，避免任何人拿到 URL
+# 就能刷 /api/wealth/ai-analyze，消耗 DeepSeek 额度（会产生真实费用）。
+workers_dev = false
+
 [[kv_namespaces]]
 binding = "QUOTE_CACHE"
 id = "a025d8ed33bf444c9ec7df45993aae92"
