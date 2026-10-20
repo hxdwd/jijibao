@@ -449,6 +449,11 @@ export function WealthImport() {
                   AI 智能识别
                 </button>
               )}
+              {/* 失败提示：此前只在 uploading 时渲染消息，失败后直接回到按钮，
+                  用户完全看不到错误原因（实测表现为「点了没反应」） */}
+              {uploadMsg && !uploading && (
+                <div className="text-center text-sm text-red-400">{uploadMsg}</div>
+              )}
             </>
           )}
 

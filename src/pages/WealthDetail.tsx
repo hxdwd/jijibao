@@ -14,7 +14,7 @@ import {
   addHoldingTransaction,
   archiveHolding,
 } from '../db/wealthStore'
-import { useWealthValuation, todayProfit } from '../hooks/useWealthValuation'
+import { useWealthValuation, todayProfit, refreshWealthValuation } from '../hooks/useWealthValuation'
 import { fmtWithSymbol, Currency } from '../utils/currency'
 import { useInvestAccounts } from '../hooks/useInvestAccounts'
 
@@ -289,7 +289,8 @@ export function WealthDetail() {
   quoteTimeRef.current = v?.quote_time ?? ''
 
   // 持仓基础字段
-  const name = v?.name || symbol!
+  // 清仓后该标的已不在估值结果里，用流水里记录的名称兜底，避免标题退化成代码
+  const name = v?.name || txs[0]?.name || symbol!
   const cur = (v?.currency ?? 'CNY') as Currency
   const curPrice = v?.current_price ?? null
   const mv = v?.market_value ?? null
@@ -433,7 +434,9 @@ export function WealthDetail() {
   const tradePriceNum = parseFloat(tradePrice) || 0
   const isSellOver = tradeDirection === 'sell' && tradeQtyNum > totalQty
   const isExactClear = tradeDirection === 'sell' && Math.abs(tradeQtyNum - totalQty) < 0.005 && tradeQtyNum > 0
-  const canSubmit = tradeQtyNum > 0 && tradePriceNum > 0 && tradeDate && !isSellOver && !!tradeAccountId
+  // 投资账户可选：基基宝面向普通基金用户，不强制先建账户。
+  // 未选账户时账号余额不联动，但买卖本身必须能提交。
+  const canSubmit = tradeQtyNum > 0 && tradePriceNum > 0 && tradeDate && !isSellOver
 
   // 快捷清仓：填入当前总持仓（2位小数）
   const fillClearAll = () => {
@@ -472,7 +475,7 @@ export function WealthDetail() {
         quantity: qty,
         price: prc,
         date: tradeDate,
-        account_id: tradeAccountId,
+        account_id: tradeAccountId || null,
         asset_currency: assetCurrency,
         is_active: true,
       } as any)
@@ -492,12 +495,15 @@ export function WealthDetail() {
         await archiveHolding(symbol, market as Market)
       }
 
-      // 记录最近账户
-      localStorage.setItem(LAST_ACCOUNT_KEY, tradeAccountId)
+      // 记录最近账户（未选账户时不记录）
+      if (tradeAccountId) localStorage.setItem(LAST_ACCOUNT_KEY, tradeAccountId)
 
       showToast(`${tradeDirection === 'buy' ? '加仓' : '减仓'}成功`, 'success')
       setShowTradeSheet(false)
       await loadTxs()
+      // 买卖后持仓已变，必须刷新估值；否则详情页顶部仍显示旧的持仓数量与市值
+      // （清仓后尤其明显：流水已归档，卡片却还显示原来的市值）
+      void refreshWealthValuation()
     } catch (e: any) {
       showToast(e?.message || '操作失败', 'error')
     }
@@ -793,8 +799,8 @@ export function WealthDetail() {
             <div className="mb-3">
               <div className="text-xs text-ink-2 mb-1.5">资金账户</div>
               {investmentAccounts.length === 0 ? (
-                <div className="text-xs text-red-400 bg-red-50 rounded-xl px-3 py-2.5">
-                  没有可用的投资账户，请先在账户管理中创建对应币种的投资账户
+                <div className="text-xs text-ink-2 bg-bg rounded-xl px-3 py-2.5">
+                  暂无资金账户，可直接提交（不计入账户余额）
                 </div>
               ) : (
                 <div className="flex flex-wrap gap-2">

@@ -4,6 +4,7 @@ import { searchQuote, fetchQuoteDetail, QuoteSearchResult, Market } from '../uti
 import { addHoldingTransaction } from '../db/wealthStore'
 import { CURRENCY_SYMBOL, Currency } from '../utils/currency'
 import { useInvestAccounts } from '../hooks/useInvestAccounts'
+import { refreshWealthValuation } from '../hooks/useWealthValuation'
 import { Coins } from 'lucide-react'
 
 function marketToCurrency(market: QuoteSearchResult['market']): Currency {
@@ -174,10 +175,9 @@ export function WealthAdd() {
       alert('请填写有效的数量和成本')
       return
     }
-    if (!tradeAccountId) {
-      alert('请选择投资账户')
-      return
-    }
+    // 投资账户是可选的：基基宝面向普通基金用户，不强制先建账户。
+    // 未选账户时 account_id 存 null，asset_currency 由市场推断，
+    // 估值与盈亏不受影响，只是不做余额联动。
     setSaving(true)
     try {
       // 确定币种：投资账户币种优先，否则用 market 推断
@@ -191,7 +191,7 @@ export function WealthAdd() {
         quantity: q,
         price: p,
         date,
-        account_id: tradeAccountId,
+        account_id: tradeAccountId || null,
         asset_currency: accountCur,
         is_active: true,
       } as any)
@@ -202,8 +202,10 @@ export function WealthAdd() {
           balance: parseFloat((targetAccount.balance - amount).toFixed(2)),
         })
       }
-      // 记录最近账户
-      localStorage.setItem(LAST_ACCOUNT_KEY, tradeAccountId)
+      // 记录最近账户（未选账户时不记录，避免记住空值）
+      if (tradeAccountId) localStorage.setItem(LAST_ACCOUNT_KEY, tradeAccountId)
+      // 主动刷新估值：首页有 2 秒挂载去抖，快速返回时可能读到旧数据
+      void refreshWealthValuation()
       navigate('/wealth')
     } catch (e: any) {
       alert('保存失败：' + (e?.message || e))
@@ -346,8 +348,8 @@ export function WealthAdd() {
           <div>
             <div className="text-xs text-ink-2 mb-1.5">投资账户</div>
             {investmentAccounts.length === 0 ? (
-              <div className="text-xs text-red-400 bg-red-50 rounded-xl px-3 py-2.5">
-                没有可用的投资账户，请先在账户管理中创建对应币种的投资账户
+              <div className="text-xs text-ink-2 bg-bg rounded-xl px-3 py-2.5">
+                暂无投资账户，可直接保存（不计入账户余额）
               </div>
             ) : (
               <div className="flex flex-wrap gap-2">
