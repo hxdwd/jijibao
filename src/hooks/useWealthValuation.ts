@@ -148,6 +148,16 @@ function refresh(): Promise<void> {
   return inFlight
 }
 
+/**
+ * 供同步引擎在「数据已写入本地库」后调用。
+ *
+ * 没有这个入口时：启动同步（约 500ms）完成后估值层毫不知情，
+ * 首页要等到 60 秒轮询才显示持仓，用户观感就是「登录后卡了很久」。
+ */
+export function refreshWealthValuation(): Promise<void> {
+  return refresh()
+}
+
 function setBaseCurrency(c: Currency) {
   try { localStorage.setItem(BASE_KEY, c) } catch {}
   setState({ baseCurrency: c })
