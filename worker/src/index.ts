@@ -40,6 +40,26 @@ const ROUTES: Record<string, Handler> = {
 
 const ALLOWED_ORIGIN = '*' // 收紧时改为读取 env.ALLOWED_ORIGINS 白名单
 
+/**
+ * Supabase 反代前缀。
+ *
+ * 为什么需要：*.supabase.co 在国内可达性很差（部分运营商直接不可达），
+ * 而 *.pages.dev 相对正常。把 Supabase 也挂到 Pages 域名下，
+ * 前端就只需要连一个域名，浏览器不再直连 supabase.co。
+ *
+ * 前端把 VITE_SUPABASE_URL 配成 `/api/supabase`（相对路径），
+ * services/supabase.ts 会拼成 `${origin}/api/supabase`。
+ */
+const SUPABASE_ORIGIN = 'https://wiswizwwqtqbkuhgawgh.supabase.co'
+const SUPABASE_PREFIX = '/api/supabase'
+
+function proxySupabase(request: Request, pathname: string): Promise<Response> {
+  const { search } = new URL(request.url)
+  const target = SUPABASE_ORIGIN + pathname.slice(SUPABASE_PREFIX.length) + search
+  // 原样透传 method / headers（含 apikey、Authorization、x-user-id）/ body
+  return fetch(new Request(target, request))
+}
+
 function corsHeaders(request: Request): Record<string, string> {
   const origin = request.headers.get('origin') || ALLOWED_ORIGIN
   return {
@@ -74,6 +94,15 @@ export default {
     }
 
     const { pathname } = new URL(request.url)
+
+    if (pathname === SUPABASE_PREFIX || pathname.startsWith(SUPABASE_PREFIX + '/')) {
+      try {
+        return await proxySupabase(request, pathname)
+      } catch (e: any) {
+        console.error('[my-bills-api] supabase proxy error', e)
+        return json({ code: 502, message: 'Supabase 上游不可达' }, 502, request)
+      }
+    }
 
     if (pathname === '/api/health') {
       return json(

@@ -1,12 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../types/database.types';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const rawUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseAnonKey) {
+if (!rawUrl || !supabaseAnonKey) {
   throw new Error('请在 .env 文件中配置 VITE_SUPABASE_URL 和 VITE_SUPABASE_ANON_KEY');
 }
+
+// 支持相对路径（如 /api/supabase）：由同域 Worker 反代到 Supabase，
+// 这样浏览器只连一个域名，避免 *.supabase.co 在国内不可达。
+const supabaseUrl = rawUrl.startsWith('/')
+  ? `${window.location.origin}${rawUrl}`
+  : rawUrl;
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {

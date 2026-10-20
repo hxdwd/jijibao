@@ -83,6 +83,19 @@ Schema 的真相源在 [my-bills/supabase/migrations](../supabase/migrations)，
 - `get_sync_meta` RPC（增量同步指纹）
 - `get_current_user_id()`（读 `x-user-id` 请求头做 RLS）
 
+### 国内可达性：Supabase 走同域反代
+
+`*.supabase.co` 在国内可达性很差，浏览器直连经常失败。因此本项目**不让浏览器直连 Supabase**：
+
+```
+浏览器 → /api/supabase/**  →  Pages Functions 转发  →  Worker  →  Supabase
+         （与页面同域，只连一个域名）
+```
+
+- 前端 `VITE_SUPABASE_URL` 配成相对路径 `/api/supabase`，`services/supabase.ts` 会拼上当前 origin
+- 真实 Supabase 地址写在 `worker/src/index.ts` 的 `SUPABASE_ORIGIN`
+- 换项目或绑自定义域名时，前者不用改，后者自动跟随
+
 ## 与原项目的关系
 
 `my-bills` 是财富板块逻辑的真相源。本项目独立演进，只单向 cherry-pick 公共 bugfix（行情源、估值算法、同步引擎）。
